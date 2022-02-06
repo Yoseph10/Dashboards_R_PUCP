@@ -1,0 +1,90 @@
+---
+title: "Test Dashboard"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    vertical_layout: scroll
+
+---
+
+```{r, echo=FALSE}
+rm(list=ls())
+```
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+library(tidyverse)
+library(rio)
+library(dplyr) 
+library(ggplot2)
+library("ggeasy")
+```
+
+```{r}
+#seteamos ruta de trabajo
+setwd("C:/Q_lab/Taller_Shiny/Taller3")
+
+#importamos datos (positivos y fallecidos solo en Lima por Covid-19)
+positivos_l<- import("positivos_l.csv")
+fallecidos_l<- import("fallecidos_l.csv")
+```
+
+
+Column {data-width=650}
+-----------------------------------------------------------------------
+
+### Recuadro 1
+
+```{r}
+positivos_l %>% 
+  group_by(añomes) %>%
+  summarise(positivos = n())  %>% #Count number of rows by group
+
+ggplot() +
+  aes(x= añomes, y=positivos) + 
+  geom_bar(colour = "black", fill = "#DD8888", width = .8, stat = "identity") +
+  xlab("Mes") + ylab("Cantidad de casos positivos nuevos")  +
+  ggtitle("Número de nuevos casos Covid-19 en LIMA") +
+  ggeasy::easy_center_title() + #centrar título
+  theme(axis.text.x = element_text(angle = 90)) +#rotar el label del eje x 
+  scale_y_continuous(labels = scales::comma)
+```
+
+Column {data-width=350}
+-----------------------------------------------------------------------
+
+### Chart B
+
+```{r}
+fallecidos_l %>% 
+  group_by(añomes) %>%
+  summarise(fallecidos = n())  %>% #Count number of rows by group
+  
+ggplot()+
+  aes(x= añomes, y=fallecidos) + 
+  geom_bar(colour = "black", fill = "deepskyblue3", width = .8, stat = "identity") +
+  xlab("Mes") + ylab("Cantidad de fallecidos")  +
+  ggtitle("Número de fallecidos Covid-19 en LIMA") +
+  ggeasy::easy_center_title() + #centrar título
+  theme(axis.text.x = element_text(angle = 90)) +#rotar el label del eje x
+  scale_y_continuous(labels = scales::comma)
+```
+
+### Chart C
+
+
+```{r}
+fallecidos_l %>% 
+  group_by(SEXO) %>% 
+  summarise(conteo = n()) %>%
+  mutate(prop = conteo / sum(conteo)*100) %>%
+  ggplot() +
+  aes(x = " ", y = prop, fill = SEXO) +
+  geom_bar(stat = "identity",width = 1,color="white")+coord_polar("y", start=0)+
+  ggtitle("Porcentaje de fallecidos por sexo en Lima") +
+  ggeasy::easy_center_title() + #centrar título
+  geom_text(aes(x = 1, label = paste(round(prop,2),"%")), position = position_stack(vjust = .5),color = "white",   size=4.5) + #texto 
+  theme_void() 
+ 
+```
+

@@ -1,0 +1,176 @@
+---
+title: "Pages"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    vertical_layout: fill
+runtime: shiny  #si queremos publicas en shinyapps.io sí o sí debemos colocar esta línea de código
+---
+
+```{r, echo=FALSE}
+rm(list=ls())
+```
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+library(tidyverse)
+library(rio)
+library(dplyr) 
+library(ggplot2)
+library("ggeasy")
+```
+
+```{r}
+#Seteamos la ruta de trabajo  
+#cuando corras la app, no setear la ruta de trabajo
+#setwd("C:/Q_lab/Taller_Shiny/Taller3")
+
+#Importamos la base de datos
+fallecidos_l<- import("fallecidos_l.csv")
+```
+
+```{r, include=FALSE}
+#Creamos la variable grupo de edad
+fallecidos_l=mutate(fallecidos_l,grupo_edad=
+                  case_when( EDAD_DECLARADA < 5 ~ "0 a 4 años",
+                            5>=EDAD_DECLARADA & EDAD_DECLARADA<10 ~"5 a 9 años",
+                            10>=EDAD_DECLARADA & EDAD_DECLARADA<15 ~"10 a 14 años",
+                            15>=EDAD_DECLARADA & EDAD_DECLARADA<20 ~"15 a 19 años",
+                            20>=EDAD_DECLARADA & EDAD_DECLARADA<25 ~"20 a 24 años",
+                            25>=EDAD_DECLARADA & EDAD_DECLARADA<30 ~"25 a 29 años",
+                            30>=EDAD_DECLARADA & EDAD_DECLARADA<35 ~"30 a 34 años",
+                            35>=EDAD_DECLARADA & EDAD_DECLARADA<40 ~"35 a 39 años",
+                            40>=EDAD_DECLARADA & EDAD_DECLARADA<45 ~"40 a 44 años",
+                            45>=EDAD_DECLARADA & EDAD_DECLARADA<50 ~"45 a 49 años",
+                            50>=EDAD_DECLARADA & EDAD_DECLARADA<55 ~"50 a 54 años",
+                            55>=EDAD_DECLARADA & EDAD_DECLARADA<60 ~"55 a 59 años",
+                            60>=EDAD_DECLARADA & EDAD_DECLARADA<65 ~"60 a 64 años",
+                            65>=EDAD_DECLARADA & EDAD_DECLARADA<70 ~"65 a 69 años",
+                            70>=EDAD_DECLARADA & EDAD_DECLARADA<75 ~"70 a 74 años",
+                            75>=EDAD_DECLARADA & EDAD_DECLARADA<80 ~"75 a 79 años",
+                            80>=EDAD_DECLARADA & EDAD_DECLARADA<85 ~"80 a 84 años",
+                            85>=EDAD_DECLARADA & EDAD_DECLARADA<90 ~"85 a 89 años",
+                            90>=EDAD_DECLARADA & EDAD_DECLARADA<95 ~"90 a 94 años",
+                            95>=EDAD_DECLARADA & EDAD_DECLARADA<100 ~"95 a 99 años",
+                            TRUE~ "más de 100"
+                            ))
+
+```
+
+
+Page 1 {data-orientation=columns}
+===================================== 
+
+Column
+-------    
+### Chart 1
+    
+```{r}
+ggplot(fallecidos_l, aes(x=grupo_edad,fill=SEXO))+
+  geom_bar(position="fill")+ #fill para porcentaje
+  xlab("Quinquenios de edad") + ylab("Porcentaje de fallecidos")  +
+  labs(fill="Sexo") +
+  ggtitle("Población fallecida en Lima por grupos de edad y sexo") +
+  ggeasy::easy_center_title() + #centrar título
+  coord_flip() +
+ # theme(legend.position='top')+
+  scale_y_continuous(labels = scales::percent_format()) # Draw ggplot2 plot scaled to 100%
+ 
+```
+
+
+Column
+-------       
+### Chart 2
+
+```{r}
+fallecidos_l %>% 
+  group_by(PROVINCIA, SEXO) %>%
+  summarise(conteo= n())%>%
+  mutate(prop = conteo / sum(conteo)*100) %>%
+
+  ggplot( aes(x=" ", y=prop, group=SEXO, colour=SEXO, fill=SEXO)) +
+  geom_bar(width = 1, stat = "identity") +
+  coord_polar(theta="y", start=0) +
+  facet_wrap(~PROVINCIA, ncol=5) + #permite hacer la división por provincias
+  ggtitle("Porcentaje de fallecidos según sexo por provincias") +
+  geom_text(aes(x = 1, label = paste(round(prop,1),"%")), position = position_stack(vjust = .5),color = "black",   size=2.8) + #texto
+  theme_void()
+```
+   
+Page 2 {data-orientation=rows}
+=================
+
+
+Column{data-height=700}
+-------
+### Chart 3
+    
+```{r}
+ggplot(fallecidos_l, aes(x=grupo_edad,fill=SEXO))+
+  geom_bar(position="fill")+ #fill para porcentaje
+  xlab("Quinquenios de edad") + ylab("Porcentaje de fallecidos")  +
+  labs(fill="Sexo") +
+  ggtitle("Población fallecida en Lima por grupos de edad y sexo") +
+  ggeasy::easy_center_title() + #centrar título
+  coord_flip() +
+ # theme(legend.position='top')+
+  scale_y_continuous(labels = scales::percent_format()) # Draw ggplot2 plot scaled to 100%
+ 
+```
+
+Column{data-height=300}
+-------
+### Chart 4
+
+```{r}
+fallecidos_l %>% 
+  group_by(PROVINCIA, SEXO) %>%
+  summarise(conteo= n())%>%
+  mutate(prop = conteo / sum(conteo)*100) %>%
+
+  ggplot( aes(x=" ", y=prop, group=SEXO, colour=SEXO, fill=SEXO)) +
+  geom_bar(width = 1, stat = "identity") +
+  coord_polar(theta="y", start=0) +
+  facet_wrap(~PROVINCIA, ncol=5) + #permite hacer la división por provincias
+  ggtitle("Porcentaje de fallecidos según sexo por provincias") +
+  geom_text(aes(x = 1, label = paste(round(prop,1),"%")), position = position_stack(vjust = .5),color = "black",   size=2.8) + #texto
+  theme_void()
+```
+
+
+Page 3
+=================
+
+Column{.tabset}
+-------
+### Chart 3
+    
+```{r}
+ggplot(fallecidos_l, aes(x=grupo_edad,fill=SEXO))+
+  geom_bar(position="fill")+ #fill para porcentaje
+  xlab("Quinquenios de edad") + ylab("Porcentaje de fallecidos")  +
+  labs(fill="Sexo") +
+  ggtitle("Población fallecida en Lima por grupos de edad y sexo") +
+  ggeasy::easy_center_title() + #centrar título
+  coord_flip() +
+ # theme(legend.position='top')+
+  scale_y_continuous(labels = scales::percent_format()) # Draw ggplot2 plot scaled to 100%
+ 
+```
+
+### Chart 4
+```{r}
+fallecidos_l %>% 
+  group_by(PROVINCIA, SEXO) %>%
+  summarise(conteo= n())%>%
+  mutate(prop = conteo / sum(conteo)*100) %>%
+
+  ggplot( aes(x=" ", y=prop, group=SEXO, colour=SEXO, fill=SEXO)) +
+  geom_bar(width = 1, stat = "identity") +
+  coord_polar(theta="y", start=0) +
+  facet_wrap(~PROVINCIA, ncol=5) + #permite hacer la división por provincias
+  ggtitle("Porcentaje de fallecidos según sexo por provincias") +
+  geom_text(aes(x = 1, label = paste(round(prop,1),"%")), position = position_stack(vjust = .5),color = "black",   size=2.8) + #texto
+  theme_void()
+```

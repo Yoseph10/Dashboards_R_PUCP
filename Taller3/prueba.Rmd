@@ -1,0 +1,150 @@
+---
+title: "Shiny inff"
+output: 
+  flexdashboard::flex_dashboard:
+  orientation: columns
+  vertical_layout: fill
+runtime: shiny #esto nos va a permitir usar shiny con flexdashboard
+---
+
+
+```{r, echo=FALSE}
+rm(list=ls())
+```
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+library(shiny)  
+library(rio)
+library(dplyr) 
+library(plotly) #ggplot
+
+```
+
+```{r}
+setwd("C:/Q_lab/Taller_Shiny/Taller3")
+
+#importamos las bases de datos (enapres_2018, enapres_2019, enapres_2020)
+
+for (i in 2018:2020){
+        
+        assign( paste0("enapres_",i),
+                import(paste0("CAP600_ENAPRES_",i,".dta") ) )
+        
+}
+```
+
+```{r}
+#vector con los nombres de las bases de datos creadas
+datasets <- c("enapres_2018", "enapres_2019", "enapres_2020") 
+
+
+#Nos quedamos con las variables de interés
+for (i in datasets){
+        
+        base <- get(i)
+        base <- subset(base, select = c("P611_1", "P611_2", "P611_3", "P611_4", "P611_5", "P611_6", "P611_7", "P611_8", "P611_9",
+              "P611_10", "P611_11", "P611_12", "P611_13", "ANIO","NOMBREDD") )
+
+        assign(i, base)
+        
+}
+```
+
+```{r}
+#convertimos las variables de percepción de inseguridad en númericas
+var_inseguridad <- c("P611_1", "P611_2", "P611_3", "P611_4", "P611_5", "P611_6", "P611_7", "P611_8", "P611_9",
+              "P611_10", "P611_11", "P611_12", "P611_13")
+
+for (i in datasets){
+        
+        base <- get(i)
+        base[var_inseguridad] <- sapply(base[var_inseguridad], as.numeric)
+        assign(i, base)
+        
+}
+```
+
+```{r}
+#Creamos una variable que tengan el valor de 1 si es que la persona al menos tiene percepción de inseguridad por alguno de los 13 items.
+# 0 si es que no presenta ninguna percepción de inseguridad
+
+for (i in datasets){
+        
+        base <- get(i)
+        
+        base <- mutate(base , indicador =
+                               case_when( P611_1 == 1 | P611_2 == 1 | P611_3 == 1 | P611_4 == 1 | P611_5 == 1 |
+                                          P611_6 == 1 | P611_7 == 1 | P611_8 == 1 | P611_9 == 1 | P611_10 == 1 |
+                                          P611_11 == 1 | P611_12 == 1 | P611_13 == 1 ~ 1,
+                                          
+                                          TRUE ~ 0
+                               ))
+        assign(i, base)
+        
+}
+```
+
+```{r}
+#unimos las tres bases 
+
+base_final <- bind_rows(enapres_2018, enapres_2019, enapres_2020)
+```
+
+
+Input{.sidebar}
+----------------------------------------------------------------
+### User Input
+
+
+```{r}
+
+#¿Cómo mejorarlo?
+# Puede haber una mejor forma de presentar estos inputs
+# Labels
+
+radioButtons(inputId="year",label="Cylinders",choices=c(2018,2019,2020))
+
+radioButtons(inputId="dep",label="Cylinders",
+             
+             choices=c("AMAZONAS","ANCASH","APURIMAC","AREQUIPA","AYACUCHO",
+                       "CAJAMARCA","CALLAO","CUSCO","HUANCAVELICA", "HUANUCO", 
+                       "ICA","JUNIN", "LA LIBERTAD", "LAMBAYEQUE", "LIMA", 
+                       "LORETO", "MADRE DE DIOS", "MOQUEGUA", "PASCO", "PIURA",
+                       "PUNO","SAN MARTIN", "TACNA", "TUMBES", "UCAYALI"))
+```
+
+Column
+----------------------------------------------------------------
+
+### Chart
+
+
+```{r}
+
+#¿Cómo mejorarlo?
+# Se podría poner un título que indice tanto el año como el departamento
+
+renderPlotly(
+        
+        base_final %>% 
+          
+          filter(ANIO == input$year, NOMBREDD== input$dep ) %>%
+                
+          group_by(indicador) %>% 
+          dplyr::summarise(conteo = n()) %>%
+          mutate(prop = conteo / sum(conteo)*100) %>%
+                
+          ggplot(aes(x= as.factor(indicador), y=prop)) + 
+                        geom_bar(position="dodge", stat="identity") +
+                        geom_text(aes(label=round(prop,2)), position=position_dodge(width=0.9), vjust=-0.25) +
+                        xlab("") + ylab("Porcentaje (%)") 
+
+)
+```
+
+
+
+
+
+

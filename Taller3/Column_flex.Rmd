@@ -1,0 +1,46 @@
+---
+title: "Column flexdashboard"          #título de la app
+output:                             
+  flexdashboard::flex_dashboard:          
+    orientation: columns                 #rows
+    vertical_layout: fill                #scroll 
+---
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+```
+
+Column 
+-----------------------------------------------------------------------
+
+### Recuadro 1
+
+```{r}
+
+```
+
+
+### Recuadro 2
+
+Column 
+-----------------------------------------------------------------------
+
+### Chart B
+
+```{r}
+
+```
+
+### Chart C
+
+```{r}
+
+```
+
+### Chart D
+
+```{r}
+
+```
+
+
